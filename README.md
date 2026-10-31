@@ -8,12 +8,6 @@ Explore the step-by-step 3D model of the gimbal:
 
 [**Open the Interactive 3D Model**](https://ayyan839.github.io/Arduino-Gimbal/3d-model/)
 
-## Demonstration Video
-
-Watch the gimbal demonstration:
-
-[**Watch the Demonstration**](video/)
-
 ## Source Code
 
 The Arduino source code is available in `ArduinoGimbal.ino`.
