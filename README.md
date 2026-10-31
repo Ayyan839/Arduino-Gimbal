@@ -4,7 +4,7 @@ An Arduino-based two-axis smartphone gimbal using an MPU-6050 motion sensor, two
 
 ## Interactive 3D Model
 
-Explore the step-by-step 3D model of the gimbal:
+Explore the Interactive step-by-step 3D model of the gimbal:
 
 [**Open the Interactive 3D Model**](https://ayyan839.github.io/Arduino-Gimbal/3d-model/)
 
