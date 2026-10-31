@@ -1,0 +1,112 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gimbal build manual</title>
+<style>:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--border-strong:#888780;--surface-1:#f5f4ee;--radius:8px}
+body{margin:0 auto;padding:16px;max-width:700px;font-family:system-ui,sans-serif;background:#fff;color:var(--text-primary)}
+button{border:1px solid var(--border-strong);background:var(--surface-1);color:var(--text-primary);padding:8px 20px;border-radius:var(--radius);font-size:15px;cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+label{display:flex;align-items:center;gap:8px;font-size:14px}</style></head><body>
+<svg id="sv" width="100%" viewBox="0 0 680 400" role="img" aria-label="3D view of the gimbal at the current build step"></svg>
+<div style="display:flex;align-items:center;gap:12px;margin:8px 0">
+<button id="bk">Back</button><span id="st" style="flex:1;text-align:center;color:var(--text-secondary);font-size:14px"></span><button id="nx">Next</button></div>
+<div id="mv" style="display:none;gap:20px;flex-wrap:wrap;margin:4px 0 10px">
+<label>Roll motor <input type="range" id="rr" min="-30" max="30" value="0"></label>
+<label>Pitch motor <input type="range" id="pp" min="-30" max="30" value="0"></label></div>
+<div id="cap" style="font-size:15px;line-height:1.6"></div>
+<script>
+const NT=13;
+const C={g:['#D3D1C7','#B4B2A9','#888780'],d:['#5F5E5A','#444441','#2C2C2A'],t:['#5DCAA5','#1D9E75','#0F6E56'],b:['#85B7EB','#378ADD','#185FA5'],w:['#F1EFE8','#D3D1C7','#B4B2A9'],a:['#FAC775','#EF9F27','#BA7517'],p:['#AFA9EC','#7F77DD','#534AB7'],k:['#F4C0D1','#ED93B1','#D4537E']};
+const O=[
+[1,[-4.5,4.5,-3.5,3.5,0,0.4],'g',[0,0,0],0],
+[1,[-4.5,4.5,-3.5,-3.1,0,7],'g',[0,0,0],0],
+[1,[-4.5,-4.1,-3.1,3.5,0,7],'g',[0,0,0],0],
+[2,[-4.0,0.5,-2.8,0.8,0.4,1.0],'t',[0,0,4],0],
+[2,[-4.0,0.5,1.1,3.2,0.4,0.9],'w',[0,0,4],0],
+[2,[1.0,4.2,-2.8,0.0,0.4,1.8],'a',[0,0,4],0],
+[2,[1.4,3.0,0.7,3.0,0.4,2.2],'d',[0,0,4],0],
+[3,[-4.5,4.5,-3.5,3.5,6.6,7],'g',[0,0,5],0],
+[3,[-4.5,4.5,3.1,3.5,0.4,6.6],'g',[0,0,5],0],
+[3,[4.1,4.5,-3.1,3.1,0.4,6.6],'g',[0,0,5],0],
+[4,[4.5,5.1,-0.6,0.6,3,4.2],'w',[3,0,0],0],
+[5,[-3.8,-1.8,-2.6,-1,7,7.4],'t',[0,0,4],0],
+[5,[1.5,4.3,-3.2,-0.4,7,8.5],'b',[0,0,4],0],
+[5,[2.5,3.3,-2.4,-1.6,8.5,9.7],'d',[0,0,4],0],
+[6,[-2.05,2.05,-0.2,4.1,7,9],'d',[0,0,5],0],
+[6,[-0.3,0.3,4.1,4.7,7.7,8.3],'g',[0,0,5],1],
+[7,[-1.5,1.5,4.7,4.9,6.5,9.5],'d',[0,4,0],1],
+[8,[-11,3,4.9,5.3,5,11],'a',[0,4,0],1],
+[9,[-10.5,-6.2,5.3,9.4,7,9],'d',[0,4,0],1],
+[9,[-6.2,-5.6,7.05,7.65,7.7,8.3],'g',[0,4,0],2],
+[10,[-5.6,-5.3,6.6,8.1,4.5,11.5],'d',[3,0,0],2],
+[11,[-5.3,-4.3,6.15,8.55,4,12],'p',[4,0,0],2],
+[12,[-4.3,10.7,6.95,7.75,4.7,11.3],'k',[5,0,0],2],
+[11,[-4.3,-1.3,6.15,8.55,4,4.7],'p',[4,0,0],2],
+[11,[-4.3,-1.3,6.15,8.55,11.3,12],'p',[4,0,0],2]
+];
+const TXT=[
+['Step 1: Prepare the box (your handle)','Do: use a plastic box about 16 x 10 x 7 cm. Make a 12 mm round hole in one short side for the switch, a 1 cm notch at the back for the USB cable, and a 2 cm slot at the front of the lid for the servo wires. (The picture is a cutaway so you can see inside.)','Use: a nail heated in a flame (hold it with pliers), a craft knife, and sandpaper to smooth the edges.','Why: this box is the part you hold. Everything inside it and on its lid stays fixed to your hand.'],
+['Step 2: Put the electronics inside','Do: stick the Arduino (teal) on the floor, the breadboard (white) next to it, and the 4xAA pack (amber) and the 9 V battery (black) at the other end.','Use: double-sided foam tape under each part, plus one zip tie round each battery so it cannot slide.','Why: heavy parts low in the handle keep it steady, and the batteries stay away from the moving parts.'],
+['Step 3: Close the lid','Do: put the lid on the box.','Use: the box\'s own clips or screws, or two strips of strong tape on the sides if it only snaps shut.','Why: the lid is the fixed platform for the sensor, joystick and roll motor. Press on it: it must not wobble or flex.'],
+['Step 4: Power switch','Do: push the slide switch (white) into the side hole from outside and fix it from inside.','Use: epoxy or hot glue round the switch body inside the box. Let it set before you touch it.','Why: one switch cuts the servo battery and the Arduino battery together, so the gimbal turns on and off with one slide.'],
+['Step 5: Sensor and joystick','Do: stick the MPU-6050 (green) flat in the middle of the lid with its X arrow pointing forward. Stick the joystick (blue) near the back edge, where your thumb rests.','Use: strong double-sided tape, then a dot of hot glue on each MPU corner. Keep their wires loose.','Why: the MPU-6050 feels how your hand tilts the box, so it must never move on the box. The joystick button switches modes.'],
+['Step 6: Roll motor','Do: lay the first servo (black) on the lid at the front, shaft pointing forward, with the shaft end hanging just past the edge. Pull its wires inside through the slot.','Use: epoxy under the servo, then two zip ties through small holes in the lid round the servo body. Let the epoxy set fully.','Why: the roll motor leans the phone left and right. Its body stays fixed; only its shaft turns (around the forward line).'],
+['Step 7: Round horn on the roll motor','Do: set CENTER_TEST to 1 (see the notes) so the servo is at centre, then push the round black disc horn onto the shaft. Fix it with the centre machine screw from your bag (the hex-socket one).','Use: the screw only, no glue, so you can adjust it later.','Why: the horn turns with the shaft. Whatever you attach to it swings with the roll motor.'],
+['Step 8: Plate on the round horn','Do: mark the plate 11 cm from its LEFT end. Lay the round horn there and fix it to the plate with 4 of the self-tapping screws from your bag, through the horn holes.','Use: the 4 screws plus a drop of epoxy under the horn. If a screw pokes out the other side, file it flat.','Why: the plate is an arm. It carries the pitch motor on the left, and the phone hangs on the right, so they balance.'],
+['Step 9: Pitch motor','Do: glue the second servo (black) on the front of the plate at the LEFT end, lying flat with its shaft pointing right.','Use: epoxy under the servo and two zip ties through holes in the plate round the body.','Why: the pitch motor nods the phone forward and back. Its body stays on the plate; only its shaft turns (around the left-right line).'],
+['Step 10: Long bar horn','Do: push the long double-arm bar horn (the long black piece from your photo) onto the pitch shaft, standing upright, then fix it with the centre screw.','Use: the screw only. The two arms must point up and down equally (use CENTER_TEST).','Why: this bar is where the clamp is fixed. It nods with the pitch motor.'],
+['Step 11: Phone clamp','Do: put the clamp\'s flat back against the bar, jaws pointing right, centred on the bar.','Use: 3 zip ties through the bar\'s holes and round the clamp, then epoxy between them. Leave it overnight.','Why: your clamp holds the phone. It nods with the pitch motor and swings with the roll motor.'],
+['Step 12: Phone and balance','Do: slide the phone into the jaws sideways (landscape), with the camera clear of the clamp. Test with the power off: the phone should stay roughly level on its own.','Use: if it tips, stick coins with double-sided tape on the plate\'s left end until it balances.','Why: a balanced phone needs very little motor force, so the motors stay cool and smooth.'],
+['Try it: drag the motors','Drag a slider. Red outline = everything that motor turns.','Roll motor: tilts the plate, pitch motor and phone together. Pitch motor: tilts only the bar, clamp and phone.','In real use the Arduino drags these for you, opposite to your hand. The range is limited to 30 degrees.']
+];
+const rad=Math.PI/180,ns='http://www.w3.org/2000/svg',sv=document.getElementById('sv'),P=(x,y,z)=>[(x-y)*0.866,(x+y)*0.5-z];
+let cur=1,ra=0,pa=0,hi=0,mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
+function tf(p,g){let x=p[0],y=p[1],z=p[2];
+if(g===2){const v=y-7.35,u=z-8,c=Math.cos(pa),s=Math.sin(pa);y=7.35+v*c-u*s;z=8+v*s+u*c;}
+if(g>=1){const u=z-8,c=Math.cos(ra),s=Math.sin(ra),x2=x*c+u*s;z=8-x*s+u*c;x=x2;}
+return [x,y,z];}
+function rn(n,g){let x=n[0],y=n[1],z=n[2];
+if(g===2){const c=Math.cos(pa),s=Math.sin(pa);const y2=y*c-z*s;z=y*s+z*c;y=y2;}
+if(g>=1){const c=Math.cos(ra),s=Math.sin(ra),x2=x*c+z*s;z=-x*s+z*c;x=x2;}
+return [x,y,z];}
+O.forEach(o=>{const b=o[1],e=o[3];[-30,0,30].forEach(r=>[-30,0,30].forEach(q2=>{ra=r*rad;pa=q2*rad;[0,1].forEach(i=>[0,1].forEach(j=>[0,1].forEach(k=>[[0,0,0],e].forEach(d=>{const q=tf([b[i]+d[0],b[2+j]+d[1],b[4+k]+d[2]],o[4]),p=P(q[0],q[1],q[2]);mnx=Math.min(mnx,p[0]);mxx=Math.max(mxx,p[0]);mny=Math.min(mny,p[1]);mxy=Math.max(mxy,p[1]);}))));}));});ra=0;pa=0;
+const W=680,H=400,m=26,sc=Math.min((W-2*m)/(mxx-mnx),(H-2*m)/(mxy-mny)),ox=(W-sc*(mxx+mnx))/2,oy=(H-sc*(mxy+mny))/2;
+const T=(x,y,z)=>{const p=P(x,y,z);return (ox+p[0]*sc).toFixed(1)+','+(oy+p[1]*sc).toFixed(1);};
+const FC=[[[0,2,6,4],[-1,0,0]],[[1,3,7,5],[1,0,0]],[[0,1,5,4],[0,-1,0]],[[2,3,7,6],[0,1,0]],[[0,1,3,2],[0,0,-1]],[[4,5,7,6],[0,0,1]]];
+const hx=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16));
+function shade(h,n){const f=(0.55+0.45*(0.75*n[2]+0.4*n[1]-0.15*n[0]))/0.73;return 'rgb('+hx(h).map(v=>Math.max(0,Math.min(255,Math.round(v*f))))+')';}
+function add(t,a,p){const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);(p||sv).appendChild(e);return e;}
+function label(txt,x,y,anc){const t=add('text',{x:x,y:y,'text-anchor':anc,'font-size':12,fill:'#E24B4A'});t.textContent=txt;}
+function draw(){
+sv.innerHTML='';
+const df=add('defs',{});df.innerHTML='<marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>';
+let first=true;
+O.forEach(o=>{
+if(o[0]>cur)return;
+const b=o[1],ex=o[3],isNew=o[0]===cur&&cur<NT,d=isNew?ex:[0,0,0],g=o[4],hl=cur===NT&&hi>0&&g>=hi;
+const vs=[];for(let i=0;i<8;i++)vs.push(tf([(i&1?b[1]:b[0])+d[0],(i&2?b[3]:b[2])+d[1],(i&4?b[5]:b[4])+d[2]],g));
+const gr=add('g',{opacity:(cur<NT&&!isNew)?0.5:1});
+FC.forEach(f=>{const n=rn(f[1],g);if(n[0]+n[1]+n[2]<=0.01)return;
+add('polygon',{points:f[0].map(i=>T(vs[i][0],vs[i][1],vs[i][2])).join(' '),fill:shade(C[o[2]][1],n),stroke:(isNew||hl)?'#E24B4A':'rgba(0,0,0,0.35)','stroke-width':(isNew||hl)?2:0.6,'stroke-linejoin':'round'},gr);});
+if(isNew&&first&&(ex[0]||ex[1]||ex[2])){first=false;const a=T((b[0]+b[1])/2+d[0],(b[2]+b[3])/2+d[1],(b[4]+b[5])/2+d[2]).split(','),f=T((b[0]+b[1])/2,(b[2]+b[3])/2,(b[4]+b[5])/2).split(',');
+add('line',{x1:a[0],y1:a[1],x2:f[0],y2:f[1],stroke:'#E24B4A','stroke-width':1.5,'stroke-dasharray':'5 4','marker-end':'url(#ar)'});}
+});
+if(cur===NT){
+const A=(p,q)=>{const a=T(p[0],p[1],p[2]).split(','),c=T(q[0],q[1],q[2]).split(',');add('line',{x1:a[0],y1:a[1],x2:c[0],y2:c[1],stroke:'#E24B4A','stroke-width':1.2,'stroke-dasharray':'6 4'});};
+A([0,-4,8],[0,13,8]);const p1=tf([-12,7.35,8],1),p2=tf([12,7.35,8],1);A(p1,p2);
+const l1=T(0,13,8).split(','),l2=T(p2[0],p2[1],p2[2]).split(',');
+label('roll axis',+l1[0]-6,+l1[1]+14,'end');label('pitch axis',+l2[0]+6,+l2[1]+4,'start');}
+const ox0=612,oy0=330;
+[[0,-34,'up',ox0-6,oy0-40,'end'],[30,17,'right',ox0+34,oy0+22,'start'],[-30,17,'forward',ox0-34,oy0+22,'end']].forEach(a=>{
+add('line',{x1:ox0,y1:oy0,x2:ox0+a[0],y2:oy0+a[1],stroke:'var(--text-secondary)','stroke-width':1.2,'marker-end':'url(#ar)'});
+const t=add('text',{x:a[3],y:a[4],'text-anchor':a[5],'font-size':12,fill:'var(--text-secondary)'});t.textContent=a[2];});
+const big=add('text',{x:16,y:32,'font-size':24,'font-weight':500,fill:'var(--text-primary)'});big.textContent=cur<NT?'Step '+cur:'Try it';
+document.getElementById('st').textContent=cur<NT?'Step '+cur+' of 12':'Try it';
+const X=TXT[cur-1];
+document.getElementById('cap').innerHTML='<strong style="font-weight:600">'+X[0]+'</strong><br>'+X[1]+'<br>'+X[2]+'<br>'+X[3]+(cur<NT?'<br><span style="color:var(--text-secondary);font-size:13px">Red outline = the new part. Dashed line = where it slides in. Faded = parts already built.</span>':'');
+document.getElementById('mv').style.display=cur===NT?'flex':'none';
+document.getElementById('bk').disabled=cur===1;document.getElementById('nx').disabled=cur===NT;
+}
+document.getElementById('bk').onclick=()=>{if(cur>1){cur--;draw();}};
+document.getElementById('nx').onclick=()=>{if(cur<NT){cur++;draw();}};
+document.getElementById('rr').oninput=e=>{ra=e.target.value*rad;hi=1;draw();};
+document.getElementById('pp').oninput=e=>{pa=e.target.value*rad;hi=2;draw();};
+draw();
+</script></body></html>
